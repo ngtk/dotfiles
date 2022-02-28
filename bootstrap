@@ -216,7 +216,7 @@ brew-install coreutils
 brew-install git
 brew-install git-lfs
 brew-install git-now
-brew-install ghq
+brew-install ghq --after "if test ! -d ~/code;then;mkdir ~/code;fi"
 brew-install tig
 brew-install imagemagick
 brew-install jq
