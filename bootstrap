@@ -235,6 +235,7 @@ brew-install postgresql
 brew-install tree
 brew-install anyenv --after "anyenv init && anyenv install --init || true"
 brew-install fzf
+brew-install envchain
 
 echo ""
 echo "=== Anyenv ==="
