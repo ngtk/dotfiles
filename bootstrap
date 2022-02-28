@@ -231,7 +231,7 @@ mas-install '411643860'  # DaisyDisk
 mas-install '539883307'  # Line
 mas-install '803453959'  # Slack
 mas-install '904280696'  # Things
-#mas-install '497799835'  # Xcode
+mas-install '497799835'  # Xcode
 
 echo ""
 echo "✅ All Done!"
