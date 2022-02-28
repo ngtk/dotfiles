@@ -1,0 +1,237 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+dir=$(cd $(dirname $0); pwd)
+
+#
+# ====== Helper Functions ======
+#
+
+# Echo text with ANSI green
+#
+# Usage:
+# echo-green [string ...]
+echo-green() {
+  printf '\033[32m%s\033[m\n' "$1"
+}
+
+# Echo text with ANSI yellow
+#
+# Usage:
+# echo-yellow [string ...]
+echo-yellow() {
+  printf '\033[33m%s\033[m\n' "$1"
+}
+
+# Echo text with ANSI red
+#
+# Usage:
+# echo-red [string ...]
+echo-red() {
+  printf '\033[31m%s\033[m\n' "$1"
+}
+
+# Exit 0 if there is the command.
+#
+# Usage:
+# exists command
+exists() {
+ type "$1" >/dev/null 2>&1
+}
+
+# Exit 0 if formula has been installed.
+#
+# Usage:
+# brew-exists formula
+brew-exists() {
+  brew list | grep "$1" &>/dev/null
+}
+
+# Install the package with Homebrew.
+#
+# Usage:
+# brew-install formula
+brew-install() {
+  FORMULA=$1
+  shift
+  echo "📦 $FORMULA"
+
+  AFTER_INSTALL=""
+  while (( $# > 0 ))
+  do
+    case $1 in
+      -a | --after | --after=*)
+        if [[ "$1" =~ ^--option= ]]; then
+          AFTER_INSTALL=$(echo $1 | sed -e 's/^--after=//')
+        elif [[ -z "$2" ]] || [[ "$2" =~ ^-+ ]]; then
+          echo "'after' requires an argument." 1>&2
+          exit 1
+        else
+          AFTER_INSTALL="$2"
+          shift
+        fi
+        ;;
+      *)
+        echo "invalid argument." 1>&2
+        exit 1
+        ;;
+    esac
+    shift
+  done 
+
+  if brew-exists $FORMULA; then
+    echo-yellow " -> Skipped: Already exists."
+  else
+    brew install $FORMULA
+    if test -n "$AFTER_INSTALL"; then
+      echo "Executing: $AFTER_INSTALL"
+      eval "$AFTER_INSTALL"
+    fi
+  fi
+}
+
+# Exit 0 if these is the app for the App ID.
+#
+# Usage:
+# mas-exists appId
+mas-exists() {
+ mas list | grep "$1" &>/dev/null
+}
+
+# Echo app name for the App ID.
+# 
+# Usage:
+# mas-name appId
+mas-name() {
+  mas info "$1" | awk "NR==1 {print}"
+}
+
+# Install the App from Mac App Store.
+#
+# Usage:
+# mas-install appId
+mas-install() {
+  echo "🖌  `mas-name $1` $1"
+  if mas-exists $1; then
+    echo-yellow " -> Skipped: Already exists."
+  else
+    mas install "$1"
+  fi
+}
+
+# Link dotfile
+#
+# Usage:
+# link file
+link() {
+  echo "🔗 Link .$1"
+  if test -e ~/.$1; then
+    echo-yellow " -> Skipped: Already linked or exist."
+  else
+    ln -s $dir/$1 ~/.$1
+    echo-green " -> Linked."
+  fi
+}
+
+
+#
+# ====== Main ======
+#
+echo ""
+echo "👋 Hello!"
+echo ""
+
+link zshrc
+
+echo ""
+echo "🔐 SSH for GitHub"
+ID_RSA_PATH="/Users/ngtk/.ssh/github.com/id_rsa"
+if test -e "$ID_RSA_PATH"; then
+  echo-yellow " -> Skipped: Already exists."
+else
+  mkdir -p ~/.ssh/github.com
+  ssh-keygen -t rsa -f $ID_RSA_PATH -C "ngtknt@me.com"
+  eval "$(ssh-agent -s)"
+  ssh-add ~/.ssh/github.com/id_rsa
+  cat ~/.ssh/github.com/id_rsa.pub | pbcopy
+  open https://github.com/settings/ssh/new
+  echo "Public key is copied to clipboard."
+  echo "If you enter public key in https://github.com/settings/ssh/new,"
+  read -p "Hit enter: "
+  ssh -T git@github.com || true
+fi
+
+
+echo "📖 Git Completion"
+if test ! -e ~/.zsh; then
+  mkdir ~/.zsh
+  echo-green " -> Created: ~/.zsh"
+fi
+
+if test ! -e ~/.zsh/git-prompt.sh; then
+  curl --silent https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh > ~/.zsh/git-prompt.sh
+  echo-green " -> Added: git-prompt.sh"
+fi
+
+if test ! -e ~/.zsh/git-completion.bash; then
+  curl --silent https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash > ~/.zsh/git-completion.bash
+  echo-green " -> Added: git-completion.bash"
+fi
+
+if test ! -e ~/.zsh/_git; then
+  curl --silent https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh > ~/.zsh/_git
+  echo-green " -> Added: _git"
+fi
+echo-green " -> Done!"
+
+
+echo "☕️ Homebrew"
+if exists brew; then
+  echo-yellow " -> Skipped: Already exists."
+else
+  eval "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+echo ""
+echo "=== Applications ==="
+brew-install visual-studio-code
+brew-install appcleaner
+brew-install docker
+brew-install firefox
+brew-install google-chrome
+brew-install google-japanese-ime
+brew-install karabiner-elements
+brew-install zoom
+brew-install notion
+
+echo ""
+echo "=== Packages ==="
+brew-install mas
+brew-install coreutils
+brew-install git
+brew-install git-lfs
+brew-install git-now
+brew-install ghq
+brew-install tig
+brew-install imagemagick
+brew-install jq
+brew-install mysql
+brew-install postgresql
+brew-install tree
+brew-install anyenv --after "anyenv init && anyenv install --init || true"
+
+echo ""
+echo "=== Mac App Store ==="
+mas-install '1333542190' # 1Password 7
+mas-install '411643860'  # DaisyDisk
+mas-install '539883307'  # Line
+mas-install '803453959'  # Slack
+mas-install '904280696'  # Things
+#mas-install '497799835'  # Xcode
+
+echo ""
+echo "✅ All Done!"
