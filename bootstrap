@@ -199,6 +199,7 @@ fi
 echo ""
 echo "=== Applications ==="
 brew-install visual-studio-code
+brew-install intellij-idea-ce
 brew-install appcleaner
 brew-install docker
 brew-install firefox
