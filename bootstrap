@@ -225,6 +225,7 @@ brew-install mysql
 brew-install postgresql
 brew-install tree
 brew-install anyenv --after "anyenv init && anyenv install --init || true"
+brew-install fzf
 
 echo ""
 echo "=== Mac App Store ==="
