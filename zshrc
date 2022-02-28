@@ -52,6 +52,7 @@ alias ls='gls --color=auto'
 # Alias
 alias vizsh='vim ~/.zshrc && source ~/.zshrc'
 alias cl='clear'
+alias hen='envchain hen env'
 
 ## Git
 alias g='git'
