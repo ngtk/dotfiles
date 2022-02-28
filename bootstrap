@@ -121,6 +121,15 @@ mas-install() {
   fi
 }
 
+anyenv-install() {
+  echo "🌱 $1"
+  if test -d ~/.anyenv/envs/$1; then
+    echo-yellow " -> Skipped: Already installed."
+  else
+    anyenv install $1
+  fi
+}
+
 # Link dotfile
 #
 # Usage:
@@ -226,6 +235,13 @@ brew-install postgresql
 brew-install tree
 brew-install anyenv --after "anyenv init && anyenv install --init || true"
 brew-install fzf
+
+echo ""
+echo "=== Anyenv ==="
+anyenv-install rbenv
+anyenv-install goenv
+anyenv-install pyenv
+anyenv-install nodenv
 
 echo ""
 echo "=== Mac App Store ==="
