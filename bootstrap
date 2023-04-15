@@ -246,7 +246,6 @@ anyenv-install nodenv
 
 echo ""
 echo "=== Mac App Store ==="
-mas-install '1333542190' # 1Password 7
 mas-install '411643860'  # DaisyDisk
 mas-install '539883307'  # Line
 mas-install '803453959'  # Slack
